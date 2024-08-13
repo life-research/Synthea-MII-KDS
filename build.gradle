@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.0.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 apply plugin: 'groovy'
@@ -15,8 +15,8 @@ group 'org.example'
 //version '1.0'
 
 compileJava {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
 }
 
 mainClassName = 'org.example.syntheakds.Main'
@@ -27,26 +27,26 @@ repositories {
 
 dependencies {
     //implementation 'org.codehaus.groovy:groovy-all:3.0.5'
-    implementation "org.codehaus.groovy:groovy-all:3.0.5"
+    implementation 'org.codehaus.groovy:groovy-all:3.0.22'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     //log4j2
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.0'
 
     //Synthea
-    implementation group: 'org.mitre.synthea', name: 'synthea', version: '3.0.0'
+    implementation group: 'org.mitre.synthea', name: 'synthea', version: '3.2.0'
 
     //Jackson
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.3'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.3'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.13.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.17.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.17.2'
 
     //HAPI FHIR
-    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.core:5.6.42'
-    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.6.42'
-    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.r4:5.6.42'
-    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-base', version: '5.7.2'
+    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.core:6.3.18'
+    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.utilities:6.3.18'
+    implementation 'ca.uhn.hapi.fhir:org.hl7.fhir.r4:6.3.18'
+    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-base', version: '7.2.2'
 
 
 }
