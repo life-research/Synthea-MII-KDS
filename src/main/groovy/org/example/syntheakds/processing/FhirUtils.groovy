@@ -91,7 +91,7 @@ class FhirUtils {
 
     private static void addToBundle(Resource resource, String resourceType, Bundle bundle){
         bundle.addEntry()
-                .setFullUrl("${resourceType}/" + resource.getIdElement().getValue())
+                .setFullUrl("urn:uuid:" + resource.getIdElement().getValue())
                 .setResource(resource)
                 .getRequest()
                 .setUrl(resourceType)
