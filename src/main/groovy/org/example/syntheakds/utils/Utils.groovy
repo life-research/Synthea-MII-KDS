@@ -68,16 +68,22 @@ class Utils {
             return null
         }
         else{
-            OffsetDateTime syntheaDateTime = null
-            try{
-                syntheaDateTime = OffsetDateTime.parse(date, formatter)
-            }
-            catch (DateTimeParseException ignored){
-                syntheaDateTime = OffsetDateTime.parse(date, formatterMicro)
-            }
+            OffsetDateTime syntheaDateTime = parseSyntheaDateTime(date)
             return Date.from(syntheaDateTime.toInstant())
         }
     }
+
+    private static OffsetDateTime parseSyntheaDateTime(String date) {
+        OffsetDateTime syntheaDateTime
+        try {
+            syntheaDateTime = OffsetDateTime.parse(date, formatter)
+        }
+        catch (DateTimeParseException ignored) {
+            syntheaDateTime = OffsetDateTime.parse(date, formatterMicro)
+        }
+        syntheaDateTime
+    }
+
 
     enum FileExtension{
         JSON("json")

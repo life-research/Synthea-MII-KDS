@@ -5,33 +5,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.example.syntheakds.processing.rxnorm.RxNormTranslator
 import org.example.syntheakds.utils.Utils
-import org.hl7.fhir.r4.model.Address
-import org.hl7.fhir.r4.model.BooleanType
-import org.hl7.fhir.r4.model.CodeableConcept
-import org.hl7.fhir.r4.model.Coding
-import org.hl7.fhir.r4.model.Condition
-import org.hl7.fhir.r4.model.DateTimeType
-import org.hl7.fhir.r4.model.DateType
-import org.hl7.fhir.r4.model.DiagnosticReport
-import org.hl7.fhir.r4.model.Encounter
-import org.hl7.fhir.r4.model.Enumerations
-import org.hl7.fhir.r4.model.HumanName
-import org.hl7.fhir.r4.model.Identifier
-import org.hl7.fhir.r4.model.IntegerType
-import org.hl7.fhir.r4.model.Location
-import org.hl7.fhir.r4.model.MedicationAdministration
-import org.hl7.fhir.r4.model.MedicationRequest
-import org.hl7.fhir.r4.model.Narrative
-import org.hl7.fhir.r4.model.Observation
-import org.hl7.fhir.r4.model.Patient
-import org.hl7.fhir.r4.model.Period
-import org.hl7.fhir.r4.model.Procedure
-import org.hl7.fhir.r4.model.Quantity
-import org.hl7.fhir.r4.model.Reference
-import org.hl7.fhir.r4.model.Resource
-import org.hl7.fhir.r4.model.StringType
-import org.hl7.fhir.r4.model.codesystems.AdministrativeGender
-import org.hl7.fhir.r4.model.codesystems.ObservationStatus
+import org.hl7.fhir.r4.model.*
 
 class Converter {
 
@@ -39,8 +13,8 @@ class Converter {
 
     private static final RxNormTranslator translator = new RxNormTranslator()
 
-    static Resource convert(JsonNode resourceNode){
-        switch(resourceNode.get("resourceType").asText()){
+    static Resource convert(JsonNode resourceNode) {
+        switch (resourceNode.get("resourceType").asText()) {
             case "Patient":
                 return convertPatient(resourceNode)
             case "Condition":
@@ -63,7 +37,7 @@ class Converter {
         }
     }
 
-    static Patient convertPatient(JsonNode patientNode){
+    static Patient convertPatient(JsonNode patientNode) {
         return new Patient().tap { it ->
             //Profile
             it.meta.addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient")
@@ -72,22 +46,24 @@ class Converter {
             def id = patientNode.get("id").asText()
             def identifier = patientNode.get("identifier").get(1)
             it.setId(id)
-            def idType = new CodeableConcept().addCoding(
-                    new Coding("http://terminology.hl7.org/CodeSystem/v2-0203", "MR", "Medical Record Number")
-            )
+
+            it.addIdentifier(new Identifier()
+                    .setSystem("http://fts.smith.care").setValue(identifier.get("value").asText()))
+
+            def idType = new CodeableConcept().addCoding(new Coding("http://terminology.hl7.org/CodeSystem/v2-0203", "MR", "Medical Record Number"))
             it.addIdentifier(new Identifier().setUse(Identifier.IdentifierUse.OFFICIAL).setType(idType)
                     .setSystem(identifier.get("system").asText()).setValue(identifier.get("value").asText()))
 
             //Name
-            it.addName().tap {name ->
+            it.addName().tap { name ->
                 def nameNode = patientNode.get("name").get(0)
                 name.use = HumanName.NameUse.OFFICIAL
                 name.family = nameNode.get("family").asText()
-                name.given.addAll(nameNode.get("given").collect {givenNode -> new StringType(givenNode.asText())})
+                name.given.addAll(nameNode.get("given").collect { givenNode -> new StringType(givenNode.asText()) })
             }
 
             //Gender
-            switch (patientNode.get("gender").asText()){
+            switch (patientNode.get("gender").asText()) {
                 case "female":
                     it.setGender(Enumerations.AdministrativeGender.FEMALE)
                     break
@@ -99,7 +75,7 @@ class Converter {
             }
 
             //Birth Date: YYYY-MM-DD
-            def date = patientNode.get("birthDate").asText().split("-").collect {s ->Integer.parseInt(s)}
+            def date = patientNode.get("birthDate").asText().split("-").collect { s -> Integer.parseInt(s) }
             //See https://docs.oracle.com/javase/8/docs/api/java/util/Date.html#Date-int-int-int-
             it.setBirthDate(new Date(date[0] - 1900, date[1] - 1, date[2]))
 
@@ -112,32 +88,28 @@ class Converter {
 
             //Marital Status
             def maritalStatus = patientNode.get("maritalStatus").get("coding").get(0)
-            it.setMaritalStatus(new CodeableConcept(new Coding(
-                    maritalStatus.get("system").asText(),
+            it.setMaritalStatus(new CodeableConcept(new Coding(maritalStatus.get("system").asText(),
                     maritalStatus.get("code").asText(),
-                    maritalStatus.get("display").asText()
-            )))
+                    maritalStatus.get("display").asText())))
 
             //Multiple Birth
-            if(patientNode.has("multipleBirthBoolean")){
+            if (patientNode.has("multipleBirthBoolean")) {
                 it.setMultipleBirth(new BooleanType(patientNode.get("multipleBirthBoolean").asBoolean(false)))
             }
-            if(patientNode.has("multipleBirthInteger")){
+            if (patientNode.has("multipleBirthInteger")) {
                 it.setMultipleBirth(new IntegerType(patientNode.get("multipleBirthInteger").asInt(0)))
             }
 
             //Communication
             def language = patientNode.get("communication").get(0).get("language").get("coding").get(0)
-            it.addCommunication().setLanguage(new CodeableConcept(new Coding(
-                    language.get("system").asText(),
+            it.addCommunication().setLanguage(new CodeableConcept(new Coding(language.get("system").asText(),
                     language.get("code").asText(),
-                    language.get("display").asText()
-            )))
+                    language.get("display").asText())))
         }
     }
 
-    static Condition convertCondition(JsonNode conditionNode){
-        return new Condition().tap {it ->
+    static Condition convertCondition(JsonNode conditionNode) {
+        return new Condition().tap { it ->
             //Profile
             it.getMeta().addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-diagnose/StructureDefinition/Diagnose")
 
@@ -146,37 +118,33 @@ class Converter {
 
             //Clinical Status
             def clinicalStatus = conditionNode.get("clinicalStatus").get("coding")
-            it.setClinicalStatus(new CodeableConcept().tap {cc ->
-                clinicalStatus.each {cs -> cc.addCoding(
-                        new Coding()
-                        .setSystem(cs.get("system").asText())
-                        .setCode(cs.get("code").asText())
-                )}
+            it.setClinicalStatus(new CodeableConcept().tap { cc ->
+                clinicalStatus.each { cs ->
+                    cc.addCoding(new Coding()
+                            .setSystem(cs.get("system").asText())
+                            .setCode(cs.get("code").asText()))
+                }
             })
 
             //Verification Status
             def verificationStatus = conditionNode.get("verificationStatus").get("coding")
-            it.setVerificationStatus(new CodeableConcept().tap {cc ->
-                verificationStatus.each {cs -> cc.addCoding(
-                        new Coding()
-                        .setSystem(cs.get("system").asText())
-                        .setCode(cs.get("code").asText())
-                )}
+            it.setVerificationStatus(new CodeableConcept().tap { cc ->
+                verificationStatus.each { cs ->
+                    cc.addCoding(new Coding()
+                            .setSystem(cs.get("system").asText())
+                            .setCode(cs.get("code").asText()))
+                }
             })
 
             //Category
-            def category = conditionNode.get("category").get(0).get("coding").each {c ->
-                it.addCategory().addCoding(
-                        new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                )
+            def category = conditionNode.get("category").get(0).get("coding").each { c -> it.addCategory().addCoding(new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))
             }
 
             //Code
             def code = conditionNode.get("code").get("coding")
-            it.setCode(new CodeableConcept().tap {cc ->
-                code.each {c -> cc.addCoding(
-                        new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                )}
+            it.setCode(new CodeableConcept().tap { cc ->
+                code.each { c -> cc.addCoding(new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))
+                }
             })
 
             //Subject
@@ -197,25 +165,21 @@ class Converter {
         }
     }
 
-    static Observation convertObservation(JsonNode observationNode){
-        return new Observation().tap {it ->
+    static Observation convertObservation(JsonNode observationNode) {
+        return new Observation().tap { it ->
             //Id
             it.setId(observationNode.get("id").asText())
 
             //Category
             def category = observationNode.get("category").get(0).get("coding")
-            it.addCategory(new CodeableConcept().tap {cc ->
-                category.each {c -> cc.addCoding(
-                    new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                )}
+            it.addCategory(new CodeableConcept().tap { cc ->
+                category.each { c -> cc.addCoding(new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))
+                }
             })
 
             //Code
             def coding = observationNode.get("code").get("coding")
-            it.setCode(new CodeableConcept().tap {cc ->
-                cc.setCoding(coding.collect(c ->
-                        new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                ))
+            it.setCode(new CodeableConcept().tap { cc -> cc.setCoding(coding.collect(c -> new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())))
             })
 
             //Subject
@@ -235,32 +199,27 @@ class Converter {
             it.setIssued(Utils.dateFromSyntheaDate(issued))
 
             //Value: Notice that there are cases where neither are present (blood pressure)
-            if(observationNode.has("valueCodeableConcept")){
+            if (observationNode.has("valueCodeableConcept")) {
                 def value = observationNode.get("valueCodeableConcept").get("coding")
-                it.setValue(new CodeableConcept().tap {cc ->
-                    cc.setCoding(value.collect(c ->
-                        new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                    ))
+                it.setValue(new CodeableConcept().tap { cc -> cc.setCoding(value.collect(c -> new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())))
                 })
             }
             if (observationNode.has("valueQunatity")) {
                 def value = observationNode.get("valueQuantity")
-                it.setValue(
-                        new Quantity()
+                it.setValue(new Quantity()
                         .setValue(value.get("value").asDouble())
                         .setUnit(value.get("unit").asText())
                         .setSystem(value.get("system").asText())
-                        .setCode(value.get("code").asText())
-                )
+                        .setCode(value.get("code").asText()))
             }
 
             //Possible components: can be present in surveys or blood pressure measurement for example
             def components = observationNode.get("component")
             handleSurveyComponent(components, it)
 
-            switch (category.get(0).get("code").asText()){
-                /*Survey, vital sign, exam and social history observations seem to fall into the capabilities of this
-                * profile*/
+            switch (category.get(0).get("code").asText()) {
+            /*Survey, vital sign, exam and social history observations seem to fall into the capabilities of this
+            * profile*/
                 case "survey":
                 case "vital-signs":
                 case "exam":
@@ -289,36 +248,30 @@ class Converter {
         }
     }
 
-    private static void handleSurveyComponent(JsonNode componentNode, Observation it){
-        it.setComponent(componentNode.collect(compNode -> new Observation.ObservationComponentComponent().tap {comp ->
+    private static void handleSurveyComponent(JsonNode componentNode, Observation it) {
+        it.setComponent(componentNode.collect(compNode -> new Observation.ObservationComponentComponent().tap { comp ->
             def code = compNode.get("code").get("coding")
-            comp.setCode(new CodeableConcept().setCoding(code.collect(c ->
-                new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-            )))
+            comp.setCode(new CodeableConcept().setCoding(code.collect(c -> new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))))
 
-            if(compNode.has("valueCodeableConcept")){
+            if (compNode.has("valueCodeableConcept")) {
                 def value = compNode.get("valueCodeableConcept").get("coding")
-                comp.setValue(new CodeableConcept().setCoding(value.collect(c ->
-                    new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-                )))
+                comp.setValue(new CodeableConcept().setCoding(value.collect(c -> new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))))
             }
-            if(compNode.has("valueQuantity")){
+            if (compNode.has("valueQuantity")) {
                 def value = compNode.get("valueQuantity")
-                comp.setValue(
-                        new Quantity()
+                comp.setValue(new Quantity()
                         .setValue(value.get("value").asDouble())
                         .setUnit(value.get("unit").asText())
                         .setSystem(value.get("system").asText())
-                        .setCode(value.get("code").asText())
-                )
+                        .setCode(value.get("code").asText()))
             }
 
             return comp
         }))
     }
 
-    static Procedure convertProcedure(JsonNode procedureNode){
-        return new Procedure().tap {it ->
+    static Procedure convertProcedure(JsonNode procedureNode) {
+        return new Procedure().tap { it ->
             //Profile
             it.getMeta().addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-prozedur/StructureDefinition/Procedure")
 
@@ -331,9 +284,7 @@ class Converter {
 
             //Code
             def code = procedureNode.get("code").get("coding")
-            it.setCode(new CodeableConcept().setCoding(code.collect(c ->
-                    new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText())
-            )))
+            it.setCode(new CodeableConcept().setCoding(code.collect(c -> new Coding(c.get("system").asText(), c.get("code").asText(), c.get("display").asText()))))
 
             //Subject
             def subjectRef = procedureNode.get("subject").get("reference").asText()
@@ -345,40 +296,34 @@ class Converter {
 
             //Performed
             def performed = procedureNode.get("performedPeriod")
-            it.setPerformed(
-                    new Period()
+            it.setPerformed(new Period()
                     .setStart(Utils.dateFromSyntheaDate(performed.get("start").asText()))
-                    .setEnd(Utils.dateFromSyntheaDate(performed.get("end").asText()))
-            )
+                    .setEnd(Utils.dateFromSyntheaDate(performed.get("end").asText())))
 
             //Location
             def location = procedureNode.get("location")
-            it.setLocation(
-                    new Reference()
+            it.setLocation(new Reference()
                     .setReference(location.get("reference").asText())
-                    .setDisplay(location.get("display").asText())
-            )
+                    .setDisplay(location.get("display").asText()))
         }
     }
 
-    static MedicationRequest convertMedicationRequest(JsonNode medicationNode){
+    static MedicationRequest convertMedicationRequest(JsonNode medicationNode) {
         def medCodes = medicationNode.get("medicationCodeableConcept")?.get("coding")
         def medicationCodes = new CodeableConcept()
         def matchingCodes = false
-        medCodes.each {c ->
+        medCodes.each { c ->
             def atcCodes = translator.translate(c.get("code").asText())
-            if(atcCodes.size() > 0){
+            if (atcCodes.size() > 0) {
                 matchingCodes = true
-                atcCodes.each {atcCode ->
-                    medicationCodes.addCoding(
-                            new Coding()
-                                    .setSystem("http://www.whocc.no/atc")
-                                    .setCode(atcCode)
-                    )
+                atcCodes.each { atcCode ->
+                    medicationCodes.addCoding(new Coding()
+                            .setSystem("http://www.whocc.no/atc")
+                            .setCode(atcCode))
                 }
             }
         }
-        if (matchingCodes) return new MedicationRequest().tap {it ->
+        if (matchingCodes) return new MedicationRequest().tap { it ->
             //Profile
             it.getMeta().addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-medikation/StructureDefinition/MedicationRequest")
 
@@ -404,10 +349,8 @@ class Converter {
             }
              */
             def medicationReference = medicationNode.get("medicationReference")
-            if(medicationReference){
-                it.setMedication(
-                        new Reference().setReference(medicationReference.get("reference").asText())
-                )
+            if (medicationReference) {
+                it.setMedication(new Reference().setReference(medicationReference.get("reference").asText()))
             }
 
             //Subject
@@ -424,18 +367,16 @@ class Converter {
 
             //Requester
             def requester = medicationNode.get("requester")
-            it.setRequester(
-                    new Reference()
+            it.setRequester(new Reference()
                     .setReference(requester.get("reference").asText())
-                    .setDisplay(requester.get("display").asText())
-            )
+                    .setDisplay(requester.get("display").asText()))
         }
 
         return null
     }
 
-    static Encounter convertEncounter(JsonNode encounterNode){
-        return new Encounter().tap {it ->
+    static Encounter convertEncounter(JsonNode encounterNode) {
+        return new Encounter().tap { it ->
             //Profile
             it.getMeta().addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung")
 
@@ -444,12 +385,10 @@ class Converter {
 
             //Identifier
             def identifier = encounterNode.get("identifier")
-            it.setIdentifier(identifier.collect(i ->
-                    new Identifier()
+            it.setIdentifier(identifier.collect(i -> new Identifier()
                     .setUse(Identifier.IdentifierUse.fromCode(i.get("use").asText()))
                     .setSystem(i.get("system").asText())
-                    .setValue(i.get("value").asText())
-            ))
+                    .setValue(i.get("value").asText())))
 
             //Status
             def status = encounterNode.get("status").asText()
@@ -467,80 +406,65 @@ class Converter {
 
             //Subject
             def subjectRef = encounterNode.get("subject")
-            it.setSubject(
-                    new Reference()
+            it.setSubject(new Reference()
                     .setReference(subjectRef.get("reference").asText())
-                    .setDisplay(subjectRef.get("display").asText())
-            )
+                    .setDisplay(subjectRef.get("display").asText()))
 
             //Participant
             def participant = encounterNode.get("participant")
-            it.setParticipant(participant.collect(p ->
-                    new Encounter.EncounterParticipantComponent().tap {epc ->
-                        epc.addType(new CodeableConcept().setCoding(p.get("type").get(0).get("coding").collect(c ->
-                                new Coding()
-                                        .setSystem(c.get("system").asText())
-                                        .setCode(c.get("code").asText())
-                                        .setDisplay(c.get("display").asText())
-                        )))
-                        def period = p.get("period")
-                        epc.setPeriod(
-                                new Period()
-                                .setStart(Utils.dateFromSyntheaDate(period.get("start").asText()))
-                                .setEnd(Utils.dateFromSyntheaDate(period.get("end").asText()))
-                        )
-                        def individual = p.get("individual")
-                        epc.setIndividual(
-                                new Reference()
-                                .setReference(individual.get("reference").asText())
-                                .setDisplay(individual.get("display").asText())
-                        )
-                    }
-            ))
+            it.setParticipant(participant.collect(p -> new Encounter.EncounterParticipantComponent().tap { epc ->
+                epc.addType(new CodeableConcept().setCoding(p.get("type").get(0).get("coding").collect(c -> new Coding()
+                        .setSystem(c.get("system").asText())
+                        .setCode(c.get("code").asText())
+                        .setDisplay(c.get("display").asText()))))
+                def period = p.get("period")
+                epc.setPeriod(new Period()
+                        .setStart(Utils.dateFromSyntheaDate(period.get("start").asText()))
+                        .setEnd(Utils.dateFromSyntheaDate(period.get("end").asText())))
+                def individual = p.get("individual")
+                epc.setIndividual(new Reference()
+                        .setReference(individual.get("reference").asText())
+                        .setDisplay(individual.get("display").asText()))
+            }))
 
             //Period
             def period = encounterNode.get("period")
-            it.setPeriod(
-                    new Period()
+            it.setPeriod(new Period()
                     .setStart(Utils.dateFromSyntheaDate(period.get("start").asText()))
-                    .setEnd(Utils.dateFromSyntheaDate(period.get("end").asText()))
-            )
+                    .setEnd(Utils.dateFromSyntheaDate(period.get("end").asText())))
 
             //Location
             def location = encounterNode.get("location")
-            it.setLocation(location.collect(l ->
-                    new Encounter.EncounterLocationComponent().tap {elc ->
-                        def elcLocation = l.get("location")
-                        elc.setLocation(
-                                new Reference()
-                                .setReference(elcLocation.get("reference").asText())
-                                .setDisplay(elcLocation.get("display").asText())
-                        )
-                    }
-            ))
+            it.setLocation(location.collect(l -> new Encounter.EncounterLocationComponent().tap { elc ->
+                def elcLocation = l.get("location")
+                elc.setLocation(new Reference()
+                        .setReference(elcLocation.get("reference").asText())
+                        .setDisplay(elcLocation.get("display").asText()))
+            }))
 
             //Service provider
             def serviceProvider = encounterNode.get("serviceProvider")
-            it.setServiceProvider(
-                    new Reference()
+            it.setServiceProvider(new Reference()
                     .setReference(serviceProvider.get("reference").asText())
-                    .setDisplay(serviceProvider.get("display").asText())
-            )
+                    .setDisplay(serviceProvider.get("display").asText()))
         }
     }
 
-    static DiagnosticReport convertDiagnosticReport(JsonNode diagRepNode){
+    static DiagnosticReport convertDiagnosticReport(JsonNode diagRepNode) {
         //Only Laboratory Diagnostic Reports will be converted
+        if (!diagRepNode.has("category")) {
+            return null
+        }
         def category = diagRepNode.get("category").get(0).get("coding")
         def isLabReport = false
-        category.find {c ->
-            if(c.get("code").asText() == "LAB"){
+        category.find { c ->
+            if (c.get("code").asText() == "LAB") {
                 isLabReport = true
                 return true
             }
             return false
         }
-        if(isLabReport) return new DiagnosticReport().tap {it ->
+        if (isLabReport) return new DiagnosticReport().tap { it ->
             //Profile
             it.getMeta().addProfile("https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/DiagnosticReportLab")
 
@@ -551,21 +475,17 @@ class Converter {
             it.setStatus(DiagnosticReport.DiagnosticReportStatus.fromCode(diagRepNode.get("status").asText()))
 
             //Category
-            it.addCategory(new CodeableConcept().setCoding(category.collect(c ->
-                    new Coding()
+            it.addCategory(new CodeableConcept().setCoding(category.collect(c -> new Coding()
                     .setSystem(c.get("system").asText())
                     .setCode(c.get("code").asText())
-                    .setDisplay(c.get("display").asText())
-            )))
+                    .setDisplay(c.get("display").asText()))))
 
             //Code
             def code = diagRepNode.get("code").get("coding")
-            it.setCode(new CodeableConcept().setCoding(code.collect(c ->
-                    new Coding()
+            it.setCode(new CodeableConcept().setCoding(code.collect(c -> new Coding()
                     .setSystem(c.get("system").asText())
                     .setCode(c.get("code").asText())
-                    .setDisplay(c.get("display").asText())
-            )))
+                    .setDisplay(c.get("display").asText()))))
 
             //Subject
             def subjectRef = diagRepNode.get("subject").get("reference").asText()
@@ -585,42 +505,36 @@ class Converter {
 
             //Performer
             def performer = diagRepNode.get("performer")
-            it.setPerformer(performer.collect(r ->
-                    new Reference()
+            it.setPerformer(performer.collect(r -> new Reference()
                     .setReference(r.get("reference").asText())
-                    .setDisplay(r.get("display").asText())
-            ))
+                    .setDisplay(r.get("display").asText())))
 
             //Result
             def result = diagRepNode.get("result")
-            it.setResult(result.collect(r ->
-                    new Reference()
-                            .setReference(r.get("reference").asText())
-                            .setDisplay(r.get("display").asText())
-            ))
+            it.setResult(result.collect(r -> new Reference()
+                    .setReference(r.get("reference").asText())
+                    .setDisplay(r.get("display").asText())))
         }
         return null
     }
 
-    static MedicationAdministration convertMedicationAdministration(JsonNode medAdmNode){
+    static MedicationAdministration convertMedicationAdministration(JsonNode medAdmNode) {
         def medCodes = medAdmNode.get("medicationCodeableConcept").get("coding")
         def medicationCodes = new CodeableConcept()
         def matchingCodes = false
-        medCodes.each {c ->
+        medCodes.each { c ->
             def atcCodes = translator.translate(c.get("code").asText())
-            if(atcCodes.size() > 0){
+            if (atcCodes.size() > 0) {
                 matchingCodes = true
-                atcCodes.each {atcCode ->
-                    medicationCodes.addCoding(
-                            new Coding()
+                atcCodes.each { atcCode ->
+                    medicationCodes.addCoding(new Coding()
                             .setSystem("http://www.whocc.no/atc")
-                            .setCode(atcCode)
-                    )
+                            .setCode(atcCode))
                 }
             }
         }
 
-        if(matchingCodes) return new MedicationAdministration().tap {it ->
+        if (matchingCodes) return new MedicationAdministration().tap { it ->
             //Id
             it.setId(medAdmNode.get("id").asText())
 
@@ -647,9 +561,7 @@ class Converter {
 
             //Reason
             def reasonRef = medAdmNode.get("reasonReference")
-            it.setReasonReference(reasonRef.collect(r ->
-                new Reference(r.get("reference").asText())
-            ))
+            it.setReasonReference(reasonRef.collect(r -> new Reference(r.get("reference").asText())))
         }
 
         return null

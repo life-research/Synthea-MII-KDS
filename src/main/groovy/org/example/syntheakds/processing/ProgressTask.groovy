@@ -12,14 +12,16 @@ class ProgressTask implements Consumer<Queue<Object>> {
 
     @Override
     void accept(Queue<Object> q) {
-        def factor = 50/q.size() //Bar length divided by initial queue size
-        do {
-            def remaining = 0
-            if (q.size() > 0) remaining = Math.max(Math.floor(q.size()*factor) as int, 0)
-            def bar = "#"*(50 - remaining) + " "*remaining
-            print("Progress: [${bar}]\r")
-            Thread.sleep(250)
-        } while(q.size() > 0)
-        print("Progress: [${"#"*50}]\r")
+        if (q.size() > 0) {
+            def factor = 50 / q.size() //Bar length divided by initial queue size
+            do {
+                def remaining = 0
+                if (q.size() > 0) remaining = Math.max(Math.floor(q.size() * factor) as int, 0)
+                def bar = "#" * (50 - remaining) + " " * remaining
+                print("Progress: [${bar}]\r")
+                Thread.sleep(250)
+            } while (q.size() > 0)
+            print("Progress: [${"#" * 50}]\r")
+        }
     }
 }
