@@ -51,7 +51,7 @@ class ProcessingTask implements Consumer<Path> {
             dates = dates.sort()
             def lastDate = dates[-1]
             def year = OffsetDateTime.parse(lastDate, DateTimeFormatter.ISO_OFFSET_DATE_TIME).minusYears(5)
-            Utils.writeFile("  " + id + ": \"" + year + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
+            Utils.writeFile("  " + id + ": \"" + year.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")) + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
         }
 
         // Create and write bundle
