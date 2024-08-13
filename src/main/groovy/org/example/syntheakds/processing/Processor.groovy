@@ -3,6 +3,8 @@ package org.example.syntheakds.processing
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.example.syntheakds.config.SyntheaKDSConfig
+import org.example.syntheakds.utils.Utils
 
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadPoolExecutor
@@ -27,6 +29,9 @@ class Processor<T> {
 
     void run(){
         logger.info("[#]Running processor ...")
+        var cnt = 0
+        def n = this.items.size()
+        Utils.writeFile("{\n", SyntheaKDSConfig.outputDirPath, "authored.json")
         this.items.each {item ->
             this.pool.execute(() -> task.accept(item))
         }
@@ -41,6 +46,12 @@ class Processor<T> {
         catch (InterruptedException exc){
             logger.error("[!]Processor was interrupted while waiting for tasks to finish:\n${exc.getMessage()}")
         }
+        def file = SyntheaKDSConfig.outputDirPath.resolve("authored.json").toFile()
+        def content = file.text
+        if (content.length() > 0) {
+            file.text = content[0..-3]
+        }
+        Utils.writeFile("\n}", SyntheaKDSConfig.outputDirPath, "authored.json")
     }
 
 }
