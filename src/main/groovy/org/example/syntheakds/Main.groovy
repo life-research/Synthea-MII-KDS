@@ -30,6 +30,11 @@ class Main {
         createDirs()
 
         logger.info("[#]Running Synthea ...")
+
+
+
+
+
         def options = configureGeneratorOptions()
         def generator = new Generator(options)
         generator.run()
@@ -60,7 +65,8 @@ class Main {
         Config.set("exporter.baseDirectory", SyntheaKDSConfig.tmpDirPath.toFile().getAbsolutePath())
         Config.set("generate.database_type", "none")
         Config.set("generate.only_dead_patients", "false")
-        Config.set("generate.only_alive_patients", "false")
+        Config.set("generate.only_alive_patients", "true")
+        Config.set("exporter.use_uuid_filenames", "true")
         return options
     }
 
