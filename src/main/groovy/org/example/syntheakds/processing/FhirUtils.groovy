@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.hl7.fhir.r4.model.Bundle
 import org.hl7.fhir.r4.model.Condition
+import org.hl7.fhir.r4.model.Consent
 import org.hl7.fhir.r4.model.DiagnosticReport
 import org.hl7.fhir.r4.model.Encounter
 import org.hl7.fhir.r4.model.MedicationAdministration
@@ -47,6 +48,8 @@ class FhirUtils {
                 case "MedicationAdministration":
                     addMedicationAdministration(r as MedicationAdministration, bundle)
                     break
+                case "Consent":
+                    addConsent(r as Consent, bundle)
                 case null:
                     break
                 default:
@@ -89,6 +92,10 @@ class FhirUtils {
         addToBundle(medAdm, "MedicationAdministration", bundle)
     }
 
+    private static void addConsent(Consent consent, Bundle bundle) {
+        addToBundle(consent, "Consent", bundle)
+    }
+
     private static void addToBundle(Resource resource, String resourceType, Bundle bundle){
         bundle.addEntry()
                 .setFullUrl("urn:uuid:" + resource.getIdElement().getValue())
@@ -97,5 +104,4 @@ class FhirUtils {
                 .setUrl(resourceType)
                 .setMethod(Bundle.HTTPVerb.POST)
     }
-
 }

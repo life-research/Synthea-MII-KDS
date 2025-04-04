@@ -31,10 +31,6 @@ class Main {
 
         logger.info("[#]Running Synthea ...")
 
-
-
-
-
         def options = configureGeneratorOptions()
         def generator = new Generator(options)
         generator.run()

@@ -20,39 +20,47 @@ class ProcessingTask implements Consumer<Path> {
     private static final IParser parser = SyntheaKDSConfig.ctx.newJsonParser().setPrettyPrint(true)
 
     private static final Logger logger = LogManager.getLogger(Converter.class)
+    private static final ConsentFactory consentFactory = new ConsentFactory()
 
     @Override
     void accept(Path path) {
         logger.trace("path: {}", path.fileName)
-        // Read whole file into memory
-        def content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
-        def bundleEntry = objectMapper.readTree(content).get("entry")
+            // Read whole file into memory
+            def content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
+            def bundleEntry = objectMapper.readTree(content).get("entry")
 
-        // Process content
-        def dates = []
-        def instances = []
-        String id = null
-        bundleEntry.each { entry ->
+            // Process content
+            def dates = []
+            def instances = []
+            String id = null
+            bundleEntry.each { entry ->
 
-            def resource = entry.get("resource")
-            instances << Converter.convert(resource)
+                def resource = entry.get("resource")
+                instances << Converter.convert(resource)
 
-            if (resource.get("resourceType").asText() == "Patient") {
-                id = resource.get("id")
+                if (resource.get("resourceType").asText() == "Patient") {
+                    id = resource.get("id")
+                }
+
+                dates << DateExtractor.extract(resource)
             }
 
-            dates << DateExtractor.extract(resource)
-        }
 
-
-        logger.trace("id {}", id)
         if ((!path.fileName.toString().startsWith("practitionerInformation") && !path.fileName.toString().startsWith("hospitalInformation"))) {
+            def date;
+
+            logger.trace("id {}", id)
             dates -= null
             dates = dates.sort()
             def lastDate = dates[-1]
             def year = OffsetDateTime.parse(lastDate, DateTimeFormatter.ISO_OFFSET_DATE_TIME).minusYears(5)
-            Utils.writeFile("  " + id + ": \"" + year.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")) + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
+            date = year.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"))
+            Utils.writeFile("  " + id + ": \"" + date + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
+
+            instances << consentFactory.createConsentResource(id, date)
         }
+
+
 
         // Create and write bundle
         def bundle = FhirUtils.createBundle(instances)

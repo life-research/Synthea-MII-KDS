@@ -29,8 +29,6 @@ class Processor<T> {
 
     void run(){
         logger.info("[#]Running processor ...")
-        var cnt = 0
-        def n = this.items.size()
         Utils.writeFile("{\n", SyntheaKDSConfig.outputDirPath, "authored.json")
         this.items.each {item ->
             this.pool.execute(() -> task.accept(item))
