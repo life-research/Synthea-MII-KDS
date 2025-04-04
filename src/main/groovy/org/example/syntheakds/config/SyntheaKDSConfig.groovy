@@ -8,7 +8,7 @@ import java.nio.file.Paths
 
 class SyntheaKDSConfig {
 
-    //Preset values
+    // Preset values
     static final Path basePath = Paths.get("").toAbsolutePath()
     static final Path mapDirPath = basePath.resolve(Paths.get("output", "mappings"))
     static final Path outputDirPath = basePath.resolve(Paths.get("output", System.currentTimeMillis().toString()))
@@ -17,7 +17,12 @@ class SyntheaKDSConfig {
     static final Path kdsDirPath = outputDirPath.resolve('kds')
     static final FhirContext ctx = FhirContext.forR4()
 
-    //Adjustable values
+    // Adjustable values
+    static long seed = 172483905238
+    static long clinicianSeed = 172483905238
+    static long referenceTime =  1724882400000
+    static long endTime = 1724882400000
     static int patientCount = 10000
-
+    static int threadPoolSize = -1
+    static String state = "Massachusetts"
 }

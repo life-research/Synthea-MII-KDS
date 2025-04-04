@@ -21,8 +21,6 @@ class Main {
 
     static void main(String[] args){
 
-        SyntheaKDSConfig.patientCount = Integer.parseInt(args[0])
-
         configureLog4j2()
 
         logger.info("[#]Starting application ...")
@@ -53,6 +51,13 @@ class Main {
     private static GeneratorOptions configureGeneratorOptions(){
         def options = new GeneratorOptions()
         options.population = SyntheaKDSConfig.patientCount
+        options.clinicianSeed = SyntheaKDSConfig.clinicianSeed
+        options.referenceTime = SyntheaKDSConfig.referenceTime
+        options.endTime = SyntheaKDSConfig.endTime
+        options.threadPoolSize = SyntheaKDSConfig.threadPoolSize
+        options.seed = SyntheaKDSConfig.seed
+        options.state = SyntheaKDSConfig.state
+
         Config.set("exporter.ccda.export", "false")
         Config.set("exporter.fhir.export", "true")
         Config.set("exporter.fhir_stu3.export", "false")
