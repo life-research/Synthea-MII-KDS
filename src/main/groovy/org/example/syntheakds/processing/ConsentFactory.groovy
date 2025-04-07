@@ -1,24 +1,17 @@
 package org.example.syntheakds.processing
 
-import org.hl7.fhir.r4.model.CodeableConcept
-import org.hl7.fhir.r4.model.Consent
-import org.hl7.fhir.r4.model.DateTimeType
-import org.hl7.fhir.r4.model.IdType
-import org.hl7.fhir.r4.model.Meta
-import org.hl7.fhir.r4.model.Reference
 import org.hl7.fhir.r4.model.*
 import java.time.Instant
 
 class ConsentFactory {
-
-    /**
+        /**
      * Creates a HAPI FHIR R4 Consent resource based on MII Broad Consent principles.
      *
      * @param patientId The ID of the patient (will be used in the Reference).
      * @param consentDateString The date/time of the consent in FHIR dateTime format string (e.g., "2019-08-27T18:19:58+02:00").
      * @return A {@link org.hl7.fhir.r4.model.Consent} object, or null if inputs are invalid.
      */
-    Consent createConsentResource(String patientId, String consentDateString) {
+    static Consent createConsentResource(String patientId, String consentDateString) {
         // Basic input validation (Groovy Truth for non-null/non-empty strings)
         if (!patientId?.trim() || !consentDateString?.trim()) {
             System.err.println "Error: patientId and consentDateString cannot be null or empty."
@@ -79,7 +72,10 @@ class ConsentFactory {
         ]
 
         // Set Patient Reference using GString for interpolation
-        consent.patient = new Reference("Patient/${patientId}")
+        consent.patient = new Reference("urn:uuid:${patientId}")
+//        consent.patient = new Reference().setIdentifier(new Identifier().setSystem("http://fts.smith.care").setValue(patientId));
+
+
         // You could also set the display name if known: consent.patient.display = "Patient Name"
 
         // Set DateTime - Use try-catch for parsing robustness

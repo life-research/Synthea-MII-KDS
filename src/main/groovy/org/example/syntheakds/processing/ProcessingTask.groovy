@@ -39,7 +39,7 @@ class ProcessingTask implements Consumer<Path> {
                 instances << Converter.convert(resource)
 
                 if (resource.get("resourceType").asText() == "Patient") {
-                    id = resource.get("id")
+                    id = resource.get("id").asText()
                 }
 
                 dates << DateExtractor.extract(resource)
@@ -55,7 +55,7 @@ class ProcessingTask implements Consumer<Path> {
             def lastDate = dates[-1]
             def year = OffsetDateTime.parse(lastDate, DateTimeFormatter.ISO_OFFSET_DATE_TIME).minusYears(5)
             date = year.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"))
-            Utils.writeFile("  " + id + ": \"" + date + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
+            Utils.writeFile("  \"" + id + "\": \"" + date + "\",\n", SyntheaKDSConfig.outputDirPath, "authored.json")
 
             instances << consentFactory.createConsentResource(id, date)
         }
