@@ -22,7 +22,8 @@ class SyntheaKDSConfig {
     static long clinicianSeed = 172483905238
     static long referenceTime =  1724882400000
     static long endTime = 1724882400000
-    static int patientCount = 10000
+    static int patientCount = 100
     static int threadPoolSize = -1
     static String state = "Massachusetts"
+    static patientIdentifierSystem = "https://ths-greifswald.de/fhir/gics/identifiers/Pseudonym"
 }

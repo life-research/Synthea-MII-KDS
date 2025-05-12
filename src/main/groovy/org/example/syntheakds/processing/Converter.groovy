@@ -3,6 +3,7 @@ package org.example.syntheakds.processing
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.example.syntheakds.config.SyntheaKDSConfig
 import org.example.syntheakds.processing.rxnorm.RxNormTranslator
 import org.example.syntheakds.utils.Utils
 import org.hl7.fhir.r4.model.*
@@ -48,7 +49,7 @@ class Converter {
             it.setId(id)
 
             it.addIdentifier(new Identifier()
-                    .setSystem("http://fts.smith.care").setValue(identifier.get("value").asText()))
+                    .setSystem(SyntheaKDSConfig.patientIdentifierSystem).setValue(identifier.get("value").asText()))
 
             def idType = new CodeableConcept().addCoding(new Coding("http://terminology.hl7.org/CodeSystem/v2-0203", "MR", "Medical Record Number"))
             it.addIdentifier(new Identifier().setUse(Identifier.IdentifierUse.OFFICIAL).setType(idType)
