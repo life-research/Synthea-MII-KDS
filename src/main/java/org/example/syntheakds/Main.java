@@ -51,7 +51,7 @@ public final class Main {
                 : Runtime.getRuntime().availableProcessors();
         logger.info("[#]Streaming {} patients through {} workers ...", SyntheaKDSConfig.patientCount, workers);
 
-        Path ndjsonPath = SyntheaKDSConfig.kdsDirPath.resolve("bundles.ndjson");
+        Path ndjsonPath = SyntheaKDSConfig.kdsDirPath.resolve("bundles.ndjson.gz");
         Path authoredPath = SyntheaKDSConfig.outputDirPath.resolve("authored.json");
 
         long start = System.currentTimeMillis() / 1000L;
