@@ -546,11 +546,14 @@ public final class Converter {
         ma.setContext(new Reference(medAdmNode.get("context").get("reference").asText()));
         ma.setEffective(new DateTimeType(Utils.dateFromSyntheaDate(medAdmNode.get("effectiveDateTime").asText())));
 
-        List<Reference> reasons = new ArrayList<>();
-        for (JsonNode r : medAdmNode.get("reasonReference")) {
-            reasons.add(new Reference(r.get("reference").asText()));
+        JsonNode reasonRefs = medAdmNode.get("reasonReference");
+        if (reasonRefs != null) {
+            List<Reference> reasons = new ArrayList<>();
+            for (JsonNode r : reasonRefs) {
+                reasons.add(new Reference(r.get("reference").asText()));
+            }
+            ma.setReasonReference(reasons);
         }
-        ma.setReasonReference(reasons);
 
         return ma;
     }

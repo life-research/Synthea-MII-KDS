@@ -11,8 +11,6 @@ public final class SyntheaKDSConfig {
     public static final Path basePath = Paths.get("").toAbsolutePath();
     public static final Path mapDirPath = basePath.resolve(Paths.get("output", "mappings"));
     public static final Path outputDirPath = basePath.resolve(Paths.get("output", Long.toString(System.currentTimeMillis())));
-    public static final Path tmpDirPath = outputDirPath.resolve("tmp_output");
-    public static final Path patDirPath = tmpDirPath.resolve("fhir");
     public static final Path kdsDirPath = outputDirPath.resolve("kds");
     public static final FhirContext ctx = FhirContext.forR4();
 
