@@ -15,9 +15,10 @@
         </File>
     </Appenders>
     <Loggers>
-        <Root level="trace">
+        <Logger name="freemarker" level="off" additivity="false"/>
+        <Root level="debug">
             <AppenderRef ref="Console" level="info"/>
-            <AppenderRef ref="File" level="debug" />
+            <AppenderRef ref="File" level="debug"/>
         </Root>
     </Loggers>
 </Configuration>
