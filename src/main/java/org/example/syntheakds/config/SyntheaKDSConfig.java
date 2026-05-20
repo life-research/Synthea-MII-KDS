@@ -19,7 +19,7 @@ public final class SyntheaKDSConfig {
     public static long clinicianSeed = 172483905238L;
     public static long referenceTime = 1724882400000L;
     public static long endTime = 1724882400000L;
-    public static int patientCount = 100000;
+    public static int patientCount;
     public static int threadPoolSize = -1;
     public static String state = "Massachusetts";
     public static String patientIdentifierSystem = "http://fts.smith.care";

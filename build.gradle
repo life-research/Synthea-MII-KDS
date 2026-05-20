@@ -18,7 +18,9 @@ compileJava {
     targetCompatibility = '21'
 }
 
-mainClassName = 'org.example.syntheakds.Main'
+application {
+    mainClass = 'org.example.syntheakds.Main'
+}
 
 repositories {
     mavenCentral()
@@ -35,7 +37,7 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.16.1'
 
     //Synthea
-    implementation group: 'org.mitre.synthea', name: 'synthea', version: '3.2.0'
+    implementation group: 'org.mitre.synthea', name: 'synthea', version: '4.0.0'
 
     //Jackson
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.17.2'
